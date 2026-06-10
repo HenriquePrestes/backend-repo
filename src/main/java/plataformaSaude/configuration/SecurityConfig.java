@@ -26,6 +26,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
+import java.util.List;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
@@ -142,9 +143,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         String frontendUrl = System.getenv("FRONTEND_URL");
-        configuration.setAllowedOrigins(frontendUrl == null || frontendUrl.isBlank()
-            ? Arrays.asList("http://localhost:5173", "http://localhost:3000")
-            : Arrays.asList("http://localhost:5173", "http://localhost:3000", frontendUrl));
+        // Use origin patterns to accept Vercel dynamic domains and the configured frontend origin
+        List<String> originPatterns = Arrays.asList("https://*.vercel.app", "http://localhost:5173", "http://localhost:3000");
+        if (frontendUrl != null && !frontendUrl.isBlank()) {
+            originPatterns = new java.util.ArrayList<>(originPatterns);
+            originPatterns.add(frontendUrl);
+        }
+        configuration.setAllowedOriginPatterns(originPatterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
